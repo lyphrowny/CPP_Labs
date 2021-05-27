@@ -1,10 +1,7 @@
 #include <QWidget>
-#include <QTime>
-#include <QThread>
-#include <QCoreApplication>
-#include <QBitArray>
 
 #include "../hdr/field.h"
+#include "../exceptions/outOfBounds.h"
 
 
 Field::Field(QWidget* parent, int rows, int cols) : QGridLayout(parent) {
@@ -16,23 +13,19 @@ Field::Field(QWidget* parent, int rows, int cols) : QGridLayout(parent) {
     }
     setSizeConstraint(SizeConstraint::SetFixedSize);
 
-    renew(false);
+    renew();
 }
 
-void Field::renew(bool shiftNeeded) {
-    QVector<QPoint> bonuses;
-    if (shiftNeeded) {
-        shiftTiles(bonuses);
-        genBonuses(bonuses);
-    }
-    while (findSeqs()){
-        shiftTiles(bonuses);
-        genBonuses(bonuses);
-    }
+void Field::renew() {
+    do {
+        shiftTiles();
+        genBonuses();
+    } while (findSeqs());
 }
 
 void Field::tilePressed(Tile* pressedTile) {
-    renew(pressedTile->action());
+    pressedTile->action();
+    renew();
 }
 
 void Field::addTile(Tile* tile, int row, int col) {
@@ -57,8 +50,7 @@ void Field::genBonus(int row, int col) {
 
 void Field::swapTiles(int row, int col, int row_, int col_) {
     qDebug() << "swapTiles" << row << col << row_ << col_;
-    auto* tile = qobject_cast<Tile*>(itemAtPosition(row, col)->widget()),
-            * tile_ = qobject_cast<Tile*>(itemAtPosition(row_, col_)->widget());
+    auto* tile = getTile(row, col), * tile_ = getTile(row_, col_);
 
     removeWidget(tile);
     removeWidget(tile_);
@@ -67,16 +59,8 @@ void Field::swapTiles(int row, int col, int row_, int col_) {
 }
 
 Tile* Field::getRandomTile(int row, int col, int r_low, int r_up, int c_low, int c_up) {
-    r_up = r_up == -1 ? rowCount() : r_up;
-    c_up = c_up == -1 ? columnCount() : c_up;
-    int r, c;
-    do {
-        r = QRandomGenerator::global()->bounded(r_low, r_up);
-        c = QRandomGenerator::global()->bounded(c_low, c_up);
-    } while (abs(r - row) + abs(c - col) <= 1);
-    qDebug() << "random tile: " << r << c;
-    qDebug() << qobject_cast<Tile*>(itemAtPosition(r, c)->widget())->getPos();
-    return qobject_cast<Tile*>(itemAtPosition(r, c)->widget());
+    QPoint pos = getRandomPos(row, col, r_low, r_up, c_low, c_up);
+    return getTile(pos.x(), pos.y());
 }
 
 QPoint Field::getRandomPos(int row, int col, int r_low, int r_up, int c_low, int c_up) {
@@ -92,13 +76,13 @@ QPoint Field::getRandomPos(int row, int col, int r_low, int r_up, int c_low, int
 }
 
 void Field::renewTile(int row, int col) {
-    auto* tile = qobject_cast<Tile*>(itemAtPosition(row, col)->widget());
+    auto* tile = getTile(row, col);
     tile->renew();
     emit tileAdded(tile, row, col);
 }
 
 void Field::renewBonusTile(int row, int col) {
-    auto* tile = qobject_cast<Tile*>(itemAtPosition(row, col)->widget());
+    auto* tile = getTile(row, col);
     tile->renewBonus();
     emit tileAdded(tile, row, col);
 }
@@ -106,35 +90,54 @@ void Field::renewBonusTile(int row, int col) {
 void Field::checkIsHidden(const QString &str) {
     for (int i = 0; i < columnCount(); i++)
         for (int j = 0; j < rowCount(); j++)
-            if (itemAtPosition(j, i)->widget()->isHidden())
+            if (isHidden(j, i))
                 qDebug() << str << j << i << "is hidden";
 }
 
-void Field::shiftTiles(QVector<QPoint> &bonuses) {
+void Field::shiftTiles() {
     qDebug() << "";
     checkIsHidden("before");
     for (int j = 0; j < columnCount(); j++) {
         int swap_pos = rowCount() - 1;
         for (int i = rowCount() - 1; i > 0; i--) {
-            if (itemAtPosition(i, j)->widget()->isHidden()) {
-                if (!itemAtPosition(i - 1, j)->widget()->isHidden()) {
-                    bonuses << QPoint(i, j);
+            if (isHidden(i, j)) {
+                if (!isHidden(i - 1, j)) {
+                    *bonuses << QPoint(i, j);
                     swapTiles(swap_pos--, j, i - 1, j);
                 }
             } else
                 swap_pos--;
         }
         int row = 0;
-        while (row < rowCount() && itemAtPosition(row, j)->widget()->isHidden() )
+        while (row < rowCount() && isHidden(row, j))
             renewTile(row++, j);
     }
     checkIsHidden("end of shift");
 }
 
-void Field::genBonuses(QVector<QPoint> &bonuses) {
-    for (auto &pos : bonuses)
+void Field::genBonuses() {
+    for (auto &pos : *bonuses)
         genBonus(pos.x(), pos.y());
-    bonuses.clear();
+    bonuses->clear();
+}
+
+QWidget* Field::getWidget(int row, int col) {
+    try {
+        if (isAllowed(row, col))
+            return itemAtPosition(row, col)->widget();
+        throw outOfBounds({row, col}, {0, rowCount()}, {0, columnCount()});
+    } catch (const outOfBounds &e) {
+        qCritical() << e.what();
+        exit(1);
+    }
+}
+
+Tile* Field::getTile(int row, int col) {
+    return qobject_cast<Tile*>(getWidget(row, col));
+}
+
+bool Field::isHidden(int row, int col) {
+    return getWidget(row, col)->isHidden();
 }
 
 bool Field::isAllowed(int row, int col) {
@@ -142,9 +145,7 @@ bool Field::isAllowed(int row, int col) {
 }
 
 bool Field::checkEquality(int row, int col, int row_, int col_) {
-    auto* tile = qobject_cast<Tile*>(itemAtPosition(row, col)->widget()),
-            * tile_ = qobject_cast<Tile*>(itemAtPosition(row_, col_)->widget());
-    return *tile == *tile_;
+    return *getTile(row, col) == *getTile(row_, col_);
 }
 
 QPoint Field::searchLine(int row, int col, int dy, int dx) {
@@ -164,25 +165,24 @@ QPoint Field::searchLine(int row, int col, int dy, int dx) {
 bool Field::findSeqs() {
     // search from left to right, from up to bottom
     int d_x = 0, d_y = 1;
+    QVector<QPoint> points;
     QPoint hpoint, vpoint;
-    bool needShift = false;
     for (int i = 0; i < rowCount(); i++) {
         for (int j = 0; j < columnCount(); j++) {
             // h (cols)
             hpoint = searchLine(i, j, d_x, d_y);
             // v (rows)
             vpoint = searchLine(i, j, d_y, d_x);
-            if (hpoint.y() - j >= 2) {
-                needShift = true;
+            if (hpoint.y() - j >= 2)
                 for (int col = j; col <= hpoint.y(); col++)
-                    itemAtPosition(i, col)->widget()->hide();
-            }
-            if (vpoint.x() - i >= 2) {
-                needShift = true;
+                    points << QPoint(i, col);
+            if (vpoint.x() - i >= 2)
                 for (int row = i; row <= vpoint.x(); row++)
-                    itemAtPosition(row, j)->widget()->hide();
-            }
+                    points << QPoint(row, j);
         }
     }
-    return needShift;
+    for (auto &point : points)
+        getWidget(point.x(), point.y())->hide();
+
+    return !points.isEmpty();
 }

@@ -20,15 +20,19 @@ public slots:
     void tilePressed(Tile* pressedTile);
 
 private:
-    void shiftTiles(QVector<QPoint> &bonuses);
+    QVector<QPoint>* bonuses = new QVector<QPoint>;
 
-    void genBonuses(QVector<QPoint> &bonuses);
+    Tile* getTile(int row, int col);
+
+    void shiftTiles();
+
+    void genBonuses();
 
     void renewBonusTile(int row, int col);
 
     void checkIsHidden(const QString &str);
 
-    void renew(bool shiftNeeded);
+    void renew();
 
     void renewTile(int row, int col);
 
@@ -47,6 +51,10 @@ private:
     void addNewTile(Tile* tile, int row, int col);
 
     void swapTiles(int row, int col, int row_, int col_);
+
+    bool isHidden(int row, int col);
+
+    QWidget* getWidget(int row, int col);
 
 public:
     Field(QWidget* parent, int rows = 10, int cols = 10);
