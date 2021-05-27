@@ -1,10 +1,11 @@
 #include <QApplication>
-#include <QPushButton>
+
+#include "./field/hdr/field.h"
 
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
-    QPushButton button("Hello world!", nullptr);
-    button.resize(200, 100);
-    button.show();
+    auto* widget = new QWidget();
+    auto *field = new Field(widget, 5, 5);
+    widget->show();
     return QApplication::exec();
 }
