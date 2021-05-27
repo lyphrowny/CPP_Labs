@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(Gems)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_PREFIX_PATH "./qt")
+set(CMAKE_PREFIX_PATH "/home/epicider/Qt5/5.15.2/gcc_64")
 set(CMAKE_AUTOMOC ON)
 
 set(QT_VERSION 5)
@@ -15,8 +15,9 @@ SET(GEMS gem/base_gem/hdr/base_gem.h gem/base_gem/src/base_gem.cpp gem/swap/hdr/
 SET(MARKER marker/hdr/marker.h)
 SET(TILE tile/hdr/tile.h tile/src/tile.cpp)
 SET(FIELD field/hdr/field.h field/src/field.cpp)
+SET(FIELD_EXC field/exceptions/outOfBounds.h)
 
-add_executable(${PROJECT_NAME} main.cpp ${GEMS} ${TILE} ${MARKER} ${FIELD})
+add_executable(${PROJECT_NAME} main.cpp ${GEMS} ${TILE} ${MARKER} ${FIELD} ${FIELD_EXC})
 
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
