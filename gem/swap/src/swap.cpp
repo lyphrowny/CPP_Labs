@@ -5,7 +5,7 @@
 
 SwapGem* SwapGem::previouslyPressed = nullptr;
 
-bool SwapGem::action() {
+void SwapGem::action() {
     if (previouslyPressed == nullptr) {
         qDebug() << "swap action, act1" << this;
         previouslyPressed = this;
@@ -19,7 +19,7 @@ bool SwapGem::action() {
         // let's imagine, the parent cannot be anyone other than QGridLayout
         auto* parent = qobject_cast<QGridLayout*>(this->parentWidget()->parentWidget()->layout());
         if (parent == nullptr)
-            return false;
+            return;
 
         // untoggle in either case
         emit this->untoggle();
@@ -38,6 +38,4 @@ bool SwapGem::action() {
             previouslyPressed = nullptr;
         }
     }
-    // no Shift is needed;
-    return false;
 }

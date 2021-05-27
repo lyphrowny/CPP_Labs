@@ -17,8 +17,6 @@ public slots:
 
     void _gemClicked() { qDebug() << "tile clicked"; emit gemClicked(); };
 
-    void setPos(Tile* tile, int row, int col) { if (tile == this) gem->setPos(row, col); };
-
 private:
     Marker* marker = nullptr;
     BaseGem* gem = nullptr;
@@ -28,6 +26,8 @@ private:
     QSize minimumSizeHint() const override { return gem->size(); };
 
     void addNewGem();
+
+    void removeGem();
 
     void hideEvent(QHideEvent* e) override {
         QWidget::hideEvent(e);
@@ -41,12 +41,15 @@ public:
 
     void renewBonus();
 
-    // TODO replace with signals and slots ??
-    bool action() { return gem->action(); };
+    void setPos(Tile* tile, int row, int col) { if (tile == this) gem->setPos(row, col); };
+
+    void action() { gem->action(); };
 
     void setRandomColor() { gem->setRandomColor(); };
 
     void setColor(const QColor &color) { gem->setColor(color); };
+
+    const int getRadius() const { return gem->getRadius(); };
 
     const QColor* getColor() const { return gem->getColor(); };
 

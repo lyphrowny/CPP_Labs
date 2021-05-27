@@ -12,7 +12,7 @@ protected:
 public:
     SwapGem(QWidget* parent) : BaseGem(parent) {};
 
-    bool action() override;
+    void action() override;
     void softHide() override { BaseGem::softHide(); previouslyPressed = nullptr; };
     void beforeHidden() override { previouslyPressed = nullptr; };
 };

@@ -24,7 +24,7 @@ public:
 
     void setRandomColor() override {};
 
-    bool action() override;
+    void action() override;
 
     void beforeHidden() override { action(); };
 

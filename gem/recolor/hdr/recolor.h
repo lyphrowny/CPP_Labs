@@ -18,7 +18,7 @@ private:
 public:
     RecolorGem(QWidget* parent) : SwapGem(parent) { tileText = text; };
 
-    bool action() override;
+    void action() override;
 
     void beforeHidden() override { if (isBonus) action(); else SwapGem::beforeHidden(); };
 };

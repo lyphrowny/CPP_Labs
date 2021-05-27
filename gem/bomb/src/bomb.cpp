@@ -4,10 +4,9 @@
 
 #include "../hdr/bomb.h"
 
-bool BombGem::action() {
-    bool needShift = false;
+void BombGem::action() {
     if (!isBonus)
-        return needShift;
+        return;
     if (this->parentWidget() != nullptr && this->parentWidget()->parentWidget() != nullptr) {
         if (++countUses >= maxUses)
             isBonus = false;
@@ -20,10 +19,7 @@ bool BombGem::action() {
                                            parent->itemAtPosition(qMax(0, this->_row - 1), this->_col), // top
                                            parent->itemAtPosition(this->_row, this->_col)}; // current
         for (auto item : to_delete)
-            if (!item->widget()->isHidden()) {
-                needShift = true;
+            if (!item->widget()->isHidden())
                 item->widget()->hide();
-            }
     }
-    return needShift;
 }

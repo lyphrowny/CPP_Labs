@@ -1,8 +1,4 @@
-#include <QGridLayout>
-#include <QStackedWidget>
-
 #include "../hdr/tile.h"
-#include "../../field/hdr/field.h"
 
 Tile::Tile(QWidget* parent) : QWidget(parent) {
     QSizePolicy sp = sizePolicy();
@@ -20,18 +16,22 @@ void Tile::addNewGem() {
     connect(gem, SIGNAL(clicked()), marker, SLOT(toggle()));
     connect(gem, SIGNAL(untoggle()), marker, SLOT(toggle()));
     connect(gem, SIGNAL(clicked()), this, SLOT(_gemClicked()));
+
+    marker->setChecked(false);
 }
 
-void Tile::renew() {
+void Tile::removeGem() {
     // softHide here is because renew called when the tile is hidden
     // if the tile is hidden, it's inactive, however can a hidden tile act?
     // I doubt that
     gem->softHide();
     gem->setParent(nullptr);
+}
 
+void Tile::renew() {
+    removeGem();
     gem = BaseGem::createRandomGem(this);
     addNewGem();
-    marker->setChecked(false);
     show();
 }
 
@@ -40,12 +40,10 @@ void Tile::renewBonus() {
     if (tmp == nullptr)
         return;
     qDebug() << "bonus not null";
-    gem->softHide();
-    gem->setParent(nullptr);
+    removeGem();
 
     gem = tmp;
     addNewGem();
-    marker->setChecked(false);
     // for the reason yet unknown, the gem is hidden
     // however the same is not true for the basic gem (in renew)
     gem->show();

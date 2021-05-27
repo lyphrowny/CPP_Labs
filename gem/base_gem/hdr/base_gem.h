@@ -4,16 +4,14 @@
 #include <QColor>
 #include <QRandomGenerator>
 
+#include <QDebug>
+
 class BaseGem : public QPushButton {
 Q_OBJECT
 
 signals:
 
     void untoggle();
-
-public slots:
-
-    void setPos(int row, int col) { _row = row, _col = col; };
 
 private:
     static const int _minSize = 50;
@@ -31,10 +29,6 @@ protected:
     QString tileText = "";
 
 public:
-    BaseGem(QWidget* parent, QColor* color) : QPushButton(parent), _color(color) {
-        setFixedSize(_minSize, _minSize);
-    }
-
     BaseGem(QWidget* parent) : QPushButton(parent) {
         setFixedSize(_minSize, _minSize);
         setRandomColor();
@@ -58,11 +52,15 @@ public:
         _color = const_cast<QColor*>(&_colors[QRandomGenerator::global()->generate() % _colors.size()]);
     };
 
+    void setPos(int row, int col) { _row = row, _col = col; };
+
+    const int getRadius() const { return genBorderRadius; };
+
     const QColor* getColor() const { return _color; };
 
     QPoint getPos() { return QPoint(_row, _col); };
 
-    virtual bool action() = 0;
+    virtual void action() = 0;
 
     virtual void beforeHidden() = 0;
 

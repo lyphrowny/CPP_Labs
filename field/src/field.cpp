@@ -40,8 +40,7 @@ void Field::addNewTile(Tile* tile, int row, int col) {
 }
 
 void Field::genBonus(int row, int col) {
-    // TODO take from Tile, which, presumably, takes from Gem
-    const int genBorderRadius = 3;
+    const int genBorderRadius = getTile(row, col)->getRadius();
     int r_low = qMax(row - genBorderRadius, 0), r_up = qMin(row + genBorderRadius, rowCount());
     int c_low = qMax(col - genBorderRadius, 0), c_up = qMin(col + genBorderRadius, columnCount());
     QPoint pos = getRandomPos(row, col, r_low, r_up, c_low, c_up);

@@ -6,7 +6,7 @@
 #include "../../../tile/hdr/tile.h"
 
 
-bool RecolorGem::action() {
+void RecolorGem::action() {
     if (!isBonus) {
         qDebug() << "swap action in recolor";
         return SwapGem::action();
@@ -47,6 +47,4 @@ bool RecolorGem::action() {
         }
         emit untoggle();
     }
-    // no Shift is needed;
-    return false;
 }
